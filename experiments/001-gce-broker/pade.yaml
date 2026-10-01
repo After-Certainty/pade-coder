@@ -1,0 +1,8 @@
+apiVersion: pade.local/v1alpha1
+kind: DevelopmentSession
+metadata:
+  name: pade-coder-experiment-001
+spec:
+  capabilities:
+    github.repo.read:
+      access: use

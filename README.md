@@ -2,85 +2,92 @@
 
 Coder integration for [PADE](https://github.com/After-Certainty/pade).
 
-This repository explores a narrow integration boundary:
+The repository explores a narrow integration boundary:
 
-> How should a Coder workspace acquire the PADE consumer, connect to a PADE broker, and establish the workload/session identity needed to request capabilities without making Coder-specific behavior part of PADE core?
+> How should a Coder workspace acquire the PADE Consumer, connect to a PADE broker, and use runtime-native workload identity without making Coder-specific behavior part of PADE core?
 
 ## Status
 
-Early integration work. No stable module contract is published yet.
+Early integration work. The first reusable Terraform module is implemented under [`modules/pade`](modules/pade), with the GCE-backed broker path captured as [Experiment 001](experiments/001-gce-broker/README.md).
 
-The first goal is deliberately small: make an existing Coder workspace able to use an existing PADE broker. Broker deployment, Runtime Conditions projection, and agent-specific behavior remain separate concerns.
+The module contract is still experimental until the module itself is dogfooded in the existing GCE-backed Coder environment.
 
-## Intended boundary
+## Architecture
 
 ```text
 Coder template / workspace
         |
-        | provisions workspace + identity
+        | workspace lifecycle
         v
 pade-coder
         |
-        | installs/configures PADE consumer
+        | install + trusted local broker binding
         v
-PADE consumer ---------------> PADE broker
-        |                          |
-        | scoped material          | authorization + fulfillment
-        v                          v
-agent / developer tools       provider systems
+PADE Consumer ---------------> PADE broker
+        ^                          |
+        |                          | authorization + fulfillment
+runtime workload identity          v
+(GCE in Experiment 001)       provider systems
 ```
 
-### This repository should own
+Coder owns workspace lifecycle. The underlying runtime owns workload identity. PADE consumes that identity and mediates authorized capabilities.
 
-- reusable Terraform for adding PADE to Coder workspaces;
-- Coder-specific bootstrap and workspace integration;
-- configuration of the PADE broker endpoint;
-- integration tests and examples that prove the Coder/PADE contract;
-- eventually, a Coder Registry-compatible module.
+## Module
 
-### This repository should not own
-
-- PADE protocol or portable intent changes;
-- PADE broker implementation;
-- broker deployment infrastructure;
-- Runtime Conditions semantics or RC → PADE projection;
-- agent-specific permission models for Cursor, Claude Code, Codex, or other agents;
-- durable credentials inside the workspace.
-
-Those concerns belong in their respective projects:
-
-- [PADE](https://github.com/After-Certainty/pade) — portable development-session capability intent and Consumer/Broker contracts.
-- [pade-broker-deployment](https://github.com/After-Certainty/pade-broker-deployment) — concrete broker deployment and operator policy.
-- [rc-pade](https://github.com/After-Certainty/rc-pade) — experimental Runtime Conditions → PADE projection.
-
-## Planned shape
-
-The intended end state is a reusable Coder module:
+A Coder template can add PADE with:
 
 ```hcl
 module "pade" {
-  source = "registry.coder.com/after-certainty/pade/coder"
+  source = "git::https://github.com/After-Certainty/pade-coder.git//modules/pade"
 
-  agent_id        = coder_agent.main.id
-  broker_endpoint = var.pade_broker_endpoint
+  agent_id            = coder_agent.main.id
+  pade_version        = "v0.3.0"
+  broker_endpoint     = var.pade_broker_endpoint
+  broker_identity     = "gce"
+  broker_capabilities = ["github.repo.read"]
 }
 ```
 
-The exact inputs are not yet a contract. They should be derived from working integration evidence rather than designed speculatively.
+The module installs the released PADE CLI, verifies its release checksum, and writes a separate module-managed binding at `~/.config/pade/coder-bindings.yaml`.
 
-A small reference template may also live here to prove the module against a real Coder workspace, but the reusable module is the primary artifact.
+See [modules/pade/README.md](modules/pade/README.md) for the current contract.
 
-## First experiment
+## Experiments
 
-The first implementation should answer only the minimum questions needed for a useful integration:
+### Experiment 001 — GCE-backed Coder → PADE broker
 
-1. How is the released PADE CLI installed into a Coder workspace?
-2. How is the broker endpoint supplied without coupling it to a particular broker deployment?
-3. Which identity is available to the workspace, and how does PADE obtain or forward it?
-4. What state, if any, must survive workspace restarts?
-5. Can the same PADE-enabled workspace be used by different agents without changing the PADE integration?
+[Experiment 001](experiments/001-gce-broker/README.md) builds on the earlier `rc-pade` identity work:
 
-Once those answers are demonstrated, the module surface can be made explicit and tested.
+- Docker-backed Coder did not expose a suitable PADE workload identity.
+- GCE-backed Coder exposed Google/GCE metadata identity.
+- PADE v0.3.0 used that identity against the deployed multi-issuer broker to obtain scoped `github.repo.read` material without durable provider credentials in the workspace.
+
+The experiment in this repository turns that evidence into a reusable Coder module and provides a safe live-validation script for the module itself.
+
+## Responsibility boundary
+
+This repository owns:
+
+- reusable Terraform for adding PADE to Coder workspaces;
+- Coder-specific PADE installation and bootstrap;
+- trusted local broker binding configuration;
+- integration tests and examples that prove the Coder/PADE contract;
+- eventually, a Coder Registry contribution.
+
+It does not own:
+
+- PADE protocol or portable intent changes;
+- PADE broker implementation;
+- broker deployment infrastructure or authorization policy;
+- Runtime Conditions semantics or RC → PADE projection;
+- Cursor-, Claude-, Codex-, or other agent-specific permission models;
+- durable provider authority inside the workspace.
+
+Related projects:
+
+- [PADE](https://github.com/After-Certainty/pade) — portable development-session capability intent and Consumer/Broker contracts.
+- [pade-broker-deployment](https://github.com/After-Certainty/pade-broker-deployment) — concrete broker deployment and operator policy.
+- [rc-pade](https://github.com/After-Certainty/rc-pade) — experimental Runtime Conditions → PADE projection and the earlier Coder/GCE identity evidence.
 
 ## Design rule
 
