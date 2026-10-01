@@ -42,7 +42,7 @@ variable "broker_audience" {
   nullable    = true
 
   validation {
-    condition     = var.broker_audience == null || trimspace(var.broker_audience) != ""
+    condition     = var.broker_audience == null ? true : trimspace(var.broker_audience) != ""
     error_message = "broker_audience must be null or a non-empty string."
   }
 }
