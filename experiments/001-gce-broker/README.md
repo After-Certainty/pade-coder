@@ -22,7 +22,7 @@ PADE Consumer / broker        capability authorization + fulfillment
 
 Coder is not treated as the identity provider.
 
-## What this PR adds
+## Reusable module
 
 The reusable module under `modules/pade`:
 
@@ -37,7 +37,7 @@ The binding file contains broker coordinates and capability names, not durable p
 
 ## Live validation
 
-The earlier 005C run proves the GCE identity/broker substrate. This experiment's module-specific live dogfood should be run from a GCE-backed Coder workspace whose attached Google service-account subject is authorized by the target PADE broker.
+The earlier 005C run proves the GCE identity/broker substrate. This experiment's module-specific live dogfood also succeeded; see the [recorded live result](#live-result-2026-10-06). To repeat the validation, use a GCE-backed Coder workspace whose attached Google service-account subject is authorized by the target PADE broker.
 
 The template should include the module approximately as follows:
 
@@ -52,14 +52,6 @@ module "pade" {
   broker_capabilities = ["github.repo.read"]
 }
 ```
-
-For pre-merge testing of this PR, append:
-
-```text
-?ref=experiment/001-minimal-coder-pade
-```
-
-to the module source.
 
 After the workspace starts, open a fresh shell and run:
 
@@ -111,9 +103,9 @@ The integration is agent-neutral. Cursor, Claude Code, Codex, or a human shell c
 - [x] Existing live evidence establishes GCE-backed Coder → PADE broker identity and fulfillment.
 - [x] Reusable module installs a released PADE CLI and writes broker bindings.
 - [x] Failure boundaries are explicit and fail closed.
-- [x] Run the new module itself in the GCE-backed Coder workspace and record the safe output from `run.sh`.
+- [x] The module itself ran successfully in the GCE-backed Coder workspace; safe output from `run.sh` is recorded below.
 
-The final checkbox is intentionally manual because CI does not have the production broker authorization or GCE workload identity.
+Live validation is manual because CI does not have the production broker authorization or GCE workload identity.
 
 ## Live result (2026-10-06)
 
