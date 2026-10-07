@@ -1,7 +1,7 @@
 ---
 display_name: PADE
 description: Install the PADE CLI and bind a workspace to an existing PADE broker using runtime workload identity
-icon: ../../../../.icons/electric-plug-emoji.svg
+icon: ../../../../.icons/pade.svg
 verified: false
 tags: [helper, integration, identity, security]
 ---
@@ -53,24 +53,6 @@ The module-managed bindings file is separate from PADE's default `~/.config/pade
 - A Linux workspace with `curl`, `tar`, `sha256sum`, `base64`, `awk`, and `find`.
 - An existing PADE broker reachable over HTTPS that authorizes the workspace's workload identity.
 - A workspace runtime that provides the selected workload identity (for `gce`, the GCE metadata server with an attached service account).
-
-## Inputs
-
-| Name                  | Required | Default         | Purpose                                                    |
-| --------------------- | -------- | --------------- | ---------------------------------------------------------- |
-| `agent_id`            | yes      | —               | Coder agent whose workspace receives PADE                  |
-| `broker_endpoint`     | yes      | —               | HTTPS PADE broker endpoint                                 |
-| `broker_capabilities` | yes      | —               | Explicit, non-empty set of capability names for the broker |
-| `pade_version`        | no       | `v0.3.0`        | Released PADE CLI version (`0.3.0` and `v0.3.0` both work) |
-| `broker_audience`     | no       | broker endpoint | Audience requested for workload identity                   |
-| `broker_identity`     | no       | `gce`           | PADE identity adapter (`gce` or `cursor`)                  |
-
-## Outputs
-
-| Name            | Value                                                                  |
-| --------------- | ---------------------------------------------------------------------- |
-| `bindings_path` | `~/.config/pade/coder-bindings.yaml`                                   |
-| `pade_version`  | Normalized PADE version installed by the module (for example `v0.3.0`) |
 
 ## Proven vs. accepted
 
