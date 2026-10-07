@@ -36,7 +36,7 @@ Coder owns workspace lifecycle. The underlying runtime owns workload identity. P
 
 A Coder template can add PADE with:
 
-```hcl
+```tf
 module "pade" {
   source = "git::https://github.com/After-Certainty/pade-coder.git//modules/pade"
 

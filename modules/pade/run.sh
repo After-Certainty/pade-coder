@@ -12,7 +12,7 @@ die() {
 }
 
 for command in curl tar sha256sum base64 awk find; do
-  command -v "$command" >/dev/null 2>&1 || die "required command not found: $command"
+  command -v "$command" > /dev/null 2>&1 || die "required command not found: $command"
 done
 
 case "$(uname -s)" in
@@ -21,8 +21,8 @@ case "$(uname -s)" in
 esac
 
 case "$(uname -m)" in
-  x86_64|amd64) arch="amd64" ;;
-  aarch64|arm64) arch="arm64" ;;
+  x86_64 | amd64) arch="amd64" ;;
+  aarch64 | arm64) arch="arm64" ;;
   *) die "unsupported workspace architecture: $(uname -m)" ;;
 esac
 
@@ -60,10 +60,10 @@ mv "$bindings_tmp" "$BINDINGS_PATH"
 add_shell_exports() {
   profile="$1"
   touch "$profile"
-  grep -qF 'export PATH="$HOME/.local/bin:$PATH"' "$profile" ||
-    printf '\n# pade-coder\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$profile"
-  grep -qF 'export PADE_BINDINGS="$HOME/.config/pade/coder-bindings.yaml"' "$profile" ||
-    printf 'export PADE_BINDINGS="$HOME/.config/pade/coder-bindings.yaml"\n' >> "$profile"
+  grep -qF 'export PATH="$HOME/.local/bin:$PATH"' "$profile" \
+    || printf '\n# pade-coder\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$profile"
+  grep -qF 'export PADE_BINDINGS="$HOME/.config/pade/coder-bindings.yaml"' "$profile" \
+    || printf 'export PADE_BINDINGS="$HOME/.config/pade/coder-bindings.yaml"\n' >> "$profile"
 }
 
 add_shell_exports "$HOME/.profile"
@@ -74,10 +74,10 @@ for profile in "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.zprofile" "$HOME/.z
 done
 
 if [ -f "$HOME/.config/fish/config.fish" ]; then
-  grep -qF 'fish_add_path $HOME/.local/bin' "$HOME/.config/fish/config.fish" ||
-    printf '\n# pade-coder\nfish_add_path $HOME/.local/bin\n' >> "$HOME/.config/fish/config.fish"
-  grep -qF 'set -gx PADE_BINDINGS $HOME/.config/pade/coder-bindings.yaml' "$HOME/.config/fish/config.fish" ||
-    printf 'set -gx PADE_BINDINGS $HOME/.config/pade/coder-bindings.yaml\n' >> "$HOME/.config/fish/config.fish"
+  grep -qF 'fish_add_path $HOME/.local/bin' "$HOME/.config/fish/config.fish" \
+    || printf '\n# pade-coder\nfish_add_path $HOME/.local/bin\n' >> "$HOME/.config/fish/config.fish"
+  grep -qF 'set -gx PADE_BINDINGS $HOME/.config/pade/coder-bindings.yaml' "$HOME/.config/fish/config.fish" \
+    || printf 'set -gx PADE_BINDINGS $HOME/.config/pade/coder-bindings.yaml\n' >> "$HOME/.config/fish/config.fish"
 fi
 
 export PATH="$INSTALL_DIR:$PATH"
