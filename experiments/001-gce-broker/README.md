@@ -138,3 +138,31 @@ pade-coder experiment 001: success
 ```
 
 The first dogfood run surfaced one defect: the installer and `run.sh` called `pade version`, but PADE v0.3.0 exposes only the `--version` flag. The install itself completed (checksum verified, binary and bindings written) but the Coder startup script exited non-zero. Both now call `pade --version`.
+
+## Live result after coder-utils migration (2026-10-06)
+
+Repeated after the module moved script orchestration to `coder-utils` 0.0.2 ([#9](https://github.com/After-Certainty/pade-coder/pull/9)). The `gcp-pade` template was pinned to `?ref=fab8690` and the existing workspace was updated (Coder v2.35.3, `coder/coder` provider v2.19.0).
+
+To prove a fresh install rather than a leftover from the previous run, `~/.local/bin/pade` and `~/.config/pade/coder-bindings.yaml` were deleted from the persistent home before the update.
+
+- The update destroyed `module.pade[0].coder_script.pade` and created `module.pade[0].module.coder_utils.coder_script.install_script`; no template variables changed.
+- `coder-utils` materialized `~/.coder-modules/after-certainty/pade/scripts/install.sh` and wrote `logs/install.log`:
+
+  ```text
+  pade-coder: installing PADE v0.3.0 (linux/amd64)
+  pade-v0.3.0-linux-amd64.tar.gz: OK
+  pade version v0.3.0 (0467ed2, built 2026-09-13T02:26:11Z)
+  pade-coder: broker bindings written to /home/ksteffe/.config/pade/coder-bindings.yaml
+  pade-coder: Coder owns workspace lifecycle; workload identity comes from the workspace runtime
+  ```
+
+- The binary and bindings were recreated; the bindings file is mode `0600` and contains only broker coordinates, the `gce` identity, and `github.repo.read`.
+- Shell exports appear once each in `.profile` and `.bashrc` after restart.
+- `bash -lc "bash run.sh"` (fresh login shell) produced output identical to the first live result, ending in:
+
+  ```text
+  repo_full_name=After-Certainty/after-certainty
+  pade-coder experiment 001: success
+  ```
+
+Not exercised: timing of login relative to the now non-blocking install script.
