@@ -10,7 +10,7 @@ The repository explores a narrow integration boundary:
 
 Early integration work. The first reusable Terraform module is implemented under [`modules/pade`](modules/pade), with the GCE-backed broker path captured as [Experiment 001](experiments/001-gce-broker/README.md).
 
-The module contract is still experimental until the module itself is dogfooded in the existing GCE-backed Coder environment.
+The module has been dogfooded in the existing GCE-backed Coder environment: a workspace built from a template using the module resolved `github.repo.read` through the deployed PADE broker end to end. The contract is proven for that one path (GCE identity, Linux amd64, PADE v0.3.0) and is not yet published to the Coder Registry.
 
 ## Architecture
 
@@ -62,7 +62,7 @@ See [modules/pade/README.md](modules/pade/README.md) for the current contract.
 - GCE-backed Coder exposed Google/GCE metadata identity.
 - PADE v0.3.0 used that identity against the deployed multi-issuer broker to obtain scoped `github.repo.read` material without durable provider credentials in the workspace.
 
-The experiment in this repository turns that evidence into a reusable Coder module and provides a safe live-validation script for the module itself.
+The experiment in this repository turns that evidence into a reusable Coder module and provides a safe live-validation script for the module itself. The live run with the module succeeded; see the [recorded result](experiments/001-gce-broker/README.md#live-result-2026-10-06).
 
 ## Responsibility boundary
 
