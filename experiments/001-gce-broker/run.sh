@@ -15,7 +15,7 @@ command -v curl >/dev/null 2>&1 || die "curl is required"
 test -f "$BINDINGS" || die "module-managed bindings not found at $BINDINGS"
 
 echo "=== PADE installation ==="
-pade version
+pade --version
 
 echo "=== GCE workload identity substrate ==="
 metadata_email="$(curl -fsS -H 'Metadata-Flavor: Google' \
