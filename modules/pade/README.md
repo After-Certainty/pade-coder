@@ -42,9 +42,15 @@ On workspace start, the module:
 5. adds `~/.local/bin` to `PATH` and sets `PADE_BINDINGS` in normal shell startup files;
 6. runs `pade --version` to confirm the install.
 
-The script blocks login until it completes. Persistent home storage keeps the binary and bindings between starts; ephemeral home storage simply causes them to be recreated.
+Coder script lifecycle, synchronization, and logs are handled by `coder-utils`. It materializes the installer at `~/.coder-modules/after-certainty/pade/scripts/install.sh` and writes its output to `~/.coder-modules/after-certainty/pade/logs/install.log`. PADE's binary and bindings retain their tool-specific locations.
+
+Unlike the previous direct startup script, `coder-utils` does not block login while installation runs. Wait for the PADE install script to finish before using `pade`. Dependent Coder scripts can use `coder exp sync want <self> ${join(" ", module.pade.scripts)}` to wait for the install pipeline.
+
+Persistent home storage keeps the binary and bindings between starts; ephemeral home storage simply causes them to be recreated.
 
 It does not deploy a PADE broker, define broker-side authorization, or place provider credentials in the workspace or in Terraform state. The bindings file contains only the broker endpoint, audience, identity adapter, and capability names.
+
+`coder-utils` also reads Coder workspace-owner metadata. Its Terraform data-source state can include existing Coder control-plane credentials supplied by the runtime; these are not passed to PADE or used as workload identity. Keep Terraform state protected as for the parent Coder template.
 
 The module-managed bindings file is separate from PADE's default `~/.config/pade/bindings.yaml`, so user-managed bindings are not overwritten.
 

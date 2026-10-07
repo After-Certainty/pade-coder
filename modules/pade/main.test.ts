@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import {
   afterEach,
   beforeAll,
@@ -24,12 +25,29 @@ const STUB_PATH =
   "/stubs:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 const RELEASE_URL =
   "https://github.com/After-Certainty/pade/releases/download/v0.3.0";
+const MODULE_DIR = "/root/.coder-modules/after-certainty/pade";
+const SYNC_NAME = "after-certainty-pade-install_script";
 const BINDINGS_PATH = "/root/.config/pade/coder-bindings.yaml";
 
 const requiredVars = {
   agent_id: "foo",
   broker_endpoint: "https://broker.example.com",
   broker_capabilities: '["github.repo.read"]',
+};
+
+const CODER_STUB = `#!/bin/sh
+[ "$1 $2" = "exp sync" ] || exit 1
+case "$3" in start|complete) ;; *) exit 1 ;; esac
+[ "$4" = "${SYNC_NAME}" ] || exit 1
+echo "$@" >> /tmp/coder.log
+`;
+
+const renderedInstaller = (script: string) => {
+  const encoded = script.match(
+    /echo -n '([^']+)' \| base64 -d > .*\/scripts\/install\.sh/,
+  );
+  expect(encoded).not.toBeNull();
+  return Buffer.from(encoded![1], "base64").toString();
 };
 
 // Serves release assets from /fixtures and records every requested URL.
@@ -82,12 +100,23 @@ afterEach(async () => {
   }
 });
 
-const setup = async (vars: Record<string, string> = {}) => {
-  const state = await runTerraformApply(import.meta.dir, {
-    ...requiredVars,
-    ...vars,
-  });
-  const instance = findResourceInstance(state, "coder_script");
+const setup = async (
+  vars: Record<string, string> = {},
+  customEnv: Record<string, string> = {},
+) => {
+  const state = await runTerraformApply(
+    import.meta.dir,
+    {
+      ...requiredVars,
+      ...vars,
+    },
+    customEnv,
+  );
+  const instance = findResourceInstance(
+    state,
+    "coder_script",
+    "install_script",
+  );
   const id = await runContainer(IMAGE);
   cleanupFunctions.push(() => removeContainer(id));
 
@@ -102,6 +131,7 @@ const setup = async (vars: Record<string, string> = {}) => {
       "mkdir -p /stubs",
       writeFile("/stubs/curl", CURL_STUB, "0755"),
       writeFile("/stubs/uname", UNAME_STUB, "0755"),
+      writeFile("/stubs/coder", CODER_STUB, "0755"),
       writeFile("/tmp/run.sh", instance.script, "0644"),
       FIXTURES,
     ].join("\n"),
@@ -130,6 +160,48 @@ describe("pade", () => {
   });
 
   testRequiredVariables(import.meta.dir, requiredVars);
+
+  it("uses only coder-utils install orchestration and preserves the rendered installer", async () => {
+    const { state, instance, id, run, sh } = await setup();
+    expect(
+      state.resources
+        .filter((resource) => resource.type === "coder_script")
+        .map((resource) => [resource.module, resource.name]),
+    ).toEqual([["module.coder_utils", "install_script"]]);
+    expect(instance.agent_id).toBe(requiredVars.agent_id);
+    expect(state.outputs.scripts.value).toEqual([SYNC_NAME]);
+    const attributes = state.resources.find(
+      (resource) => resource.type === "coder_script",
+    )!.instances[0].attributes;
+    expect(attributes.display_name).toBe("PADE: Install Script");
+    expect(attributes.run_on_start).toBe(true);
+    expect(attributes.start_blocks_login).toBe(false);
+    const template = await readFile(
+      `${import.meta.dir}/scripts/install.sh.tftpl`,
+      "utf8",
+    );
+    const bindings = Buffer.from(
+      renderedInstaller(instance.script).match(/^BINDINGS_B64='([^']*)'$/m)![1],
+      "base64",
+    ).toString();
+    expect(renderedInstaller(instance.script)).toBe(
+      template
+        .replace("${PADE_VERSION}", "v0.3.0")
+        .replace("${BINDINGS_B64}", Buffer.from(bindings).toString("base64")),
+    );
+    const result = await run();
+    expect(result.exitCode).toBe(0);
+    expect(
+      await readFileContainer(id, `${MODULE_DIR}/scripts/install.sh`),
+    ).toBe(renderedInstaller(instance.script));
+    expect(await readFileContainer(id, `${MODULE_DIR}/logs/install.log`)).toBe(
+      result.stdout,
+    );
+    expect((await sh("cat /tmp/coder.log")).stdout.trim().split("\n")).toEqual([
+      `exp sync start ${SYNC_NAME}`,
+      `exp sync complete ${SYNC_NAME}`,
+    ]);
+  });
 
   it("installs the amd64 release and runs pade --version", async () => {
     const { run, sh } = await setup();
@@ -178,7 +250,7 @@ describe("pade", () => {
     const { run, sh } = await setup();
     const result = await run({ FAKE_UNAME_M: "riscv64" });
     expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain(
+    expect(result.stdout + result.stderr).toContain(
       "unsupported workspace architecture: riscv64",
     );
     expect((await sh("test -e /tmp/curl.log")).exitCode).not.toBe(0);
@@ -188,7 +260,9 @@ describe("pade", () => {
     const { run, sh } = await setup();
     const result = await run({ FAKE_UNAME_S: "Darwin" });
     expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain("Linux workspaces are required");
+    expect(result.stdout + result.stderr).toContain(
+      "Linux workspaces are required",
+    );
     expect((await sh("test -e /tmp/curl.log")).exitCode).not.toBe(0);
   });
 
@@ -209,7 +283,7 @@ describe("pade", () => {
     await sh("sed -i '/linux-amd64/d' /fixtures/SHA256SUMS");
     const result = await run();
     expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain(
+    expect(result.stdout + result.stderr).toContain(
       "release checksum does not contain pade-v0.3.0-linux-amd64.tar.gz",
     );
     expect((await sh("test -e /root/.local/bin/pade")).exitCode).not.toBe(0);
@@ -286,15 +360,58 @@ done`);
   });
 
   it("keeps credential material out of state and the installer", async () => {
-    const { state, instance } = await setup({
-      broker_capabilities: '["github.repo.read"]',
-    });
+    const coderSession = "test-only-coder-session-token";
+    const { state, instance, id, run } = await setup(
+      {},
+      {
+        CODER_WORKSPACE_OWNER_SESSION_TOKEN: coderSession,
+      },
+    );
     const credentialPattern =
       /token|secret|password|private key|ghp_|github_pat_|gho_|ghs_/i;
+    const installer = renderedInstaller(instance.script);
     expect(instance.script).not.toMatch(credentialPattern);
-    expect(JSON.stringify(state)).not.toMatch(credentialPattern);
+    expect(installer).not.toMatch(credentialPattern);
+    // Upstream coder-utils reads owner metadata, including Coder's existing
+    // control-plane session token. Allow only that exact fixture in that field;
+    // it must never reach the PADE script, bindings, logs, or other state.
+    const checkValues = (value: unknown): void => {
+      if (typeof value === "string")
+        expect(value).not.toMatch(credentialPattern);
+      else if (Array.isArray(value)) value.forEach(checkValues);
+      else if (value && typeof value === "object")
+        Object.values(value).forEach(checkValues);
+    };
+    const owner = state.resources.find(
+      (resource) =>
+        resource.module === "module.coder_utils" &&
+        resource.mode === "data" &&
+        resource.type === "coder_workspace_owner",
+    );
+    expect(owner).toBeDefined();
+    expect(owner!.instances[0].attributes.session_token).toBe(coderSession);
+    for (const resource of state.resources) {
+      for (const instance of resource.instances) {
+        const { session_token, ...attributes } = instance.attributes;
+        if (resource === owner) {
+          expect(session_token).toBe(coderSession);
+          expect(attributes.ssh_private_key).toBe("");
+          if ("oidc_access_token" in attributes)
+            expect(attributes.oidc_access_token).toBe("");
+        } else checkValues(session_token);
+        checkValues(attributes);
+      }
+    }
+    checkValues(state.outputs);
+    expect((await run()).exitCode).toBe(0);
+    expect(
+      await readFileContainer(id, `${MODULE_DIR}/scripts/install.sh`),
+    ).toBe(installer);
+    expect(
+      await readFileContainer(id, `${MODULE_DIR}/logs/install.log`),
+    ).not.toMatch(credentialPattern);
 
-    const embedded = instance.script.match(/^BINDINGS_B64='([^']*)'$/m);
+    const embedded = installer.match(/^BINDINGS_B64='([^']*)'$/m);
     expect(embedded).not.toBeNull();
     const bindings = Bun.YAML.parse(
       Buffer.from(embedded![1], "base64").toString(),

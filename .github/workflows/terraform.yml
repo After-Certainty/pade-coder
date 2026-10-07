@@ -37,7 +37,7 @@ jobs:
         run: terraform test -verbose
 
       - name: ShellCheck installer
-        run: shellcheck --severity=warning modules/pade/run.sh
+        run: shellcheck --severity=warning modules/pade/scripts/install.sh.tftpl
 
   installer:
     runs-on: ubuntu-latest

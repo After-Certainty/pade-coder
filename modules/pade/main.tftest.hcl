@@ -42,22 +42,17 @@ run "defaults" {
   }
 
   assert {
-    condition     = resource.coder_script.pade.agent_id == "test-agent-id"
-    error_message = "coder_script should target the provided agent"
+    condition     = output.scripts == ["after-certainty-pade-install_script"]
+    error_message = "only the install synchronization name should be exposed"
   }
 
   assert {
-    condition     = resource.coder_script.pade.run_on_start && resource.coder_script.pade.start_blocks_login
-    error_message = "coder_script should run on start and block login"
-  }
-
-  assert {
-    condition     = strcontains(resource.coder_script.pade.script, "PADE_VERSION='v0.3.0'")
+    condition     = strcontains(local.install_script, "PADE_VERSION='v0.3.0'")
     error_message = "installer should be rendered with the normalized PADE version"
   }
 
   assert {
-    condition     = strcontains(resource.coder_script.pade.script, "BINDINGS_B64='${base64encode(local.bindings)}'")
+    condition     = strcontains(local.install_script, "BINDINGS_B64='${base64encode(local.bindings)}'")
     error_message = "installer should embed the generated bindings"
   }
 }
@@ -75,7 +70,7 @@ run "version_normalization" {
   }
 
   assert {
-    condition     = strcontains(resource.coder_script.pade.script, "PADE_VERSION='v0.4.1'")
+    condition     = strcontains(local.install_script, "PADE_VERSION='v0.4.1'")
     error_message = "installer should receive the normalized version"
   }
 }
@@ -239,7 +234,7 @@ run "no_credential_material" {
   assert {
     condition = !can(regex(
       "(?i)(token|secret|password|private key|ghp_|github_pat_|gho_|ghs_)",
-      "${resource.coder_script.pade.script}\n${local.bindings}",
+      "${local.install_script}\n${local.bindings}",
     ))
     error_message = "installer and bindings must not contain credential material"
   }
