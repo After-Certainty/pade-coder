@@ -1,5 +1,6 @@
 # Terraform
 .terraform/
+.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 crash.log
@@ -8,6 +9,9 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# Bun / Node
+node_modules/
 
 # Local tooling
 .DS_Store

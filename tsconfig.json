@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "esnext",
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "types": ["bun-types"],
+    "paths": {
+      "~test": ["./test/test.ts"]
+    }
+  }
+}

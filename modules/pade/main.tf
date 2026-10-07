@@ -96,7 +96,7 @@ resource "coder_script" "pade" {
   run_on_start       = true
   start_blocks_login = true
 
-  script = templatefile("${path.module}/scripts/install.sh.tftpl", {
+  script = templatefile("${path.module}/run.sh", {
     PADE_VERSION = local.pade_version
     BINDINGS_B64 = base64encode(local.bindings)
   })
