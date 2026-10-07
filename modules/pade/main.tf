@@ -4,7 +4,7 @@ terraform {
   required_providers {
     coder = {
       source  = "coder/coder"
-      version = ">= 2.5"
+      version = ">= 2.13"
     }
   }
 }
@@ -90,16 +90,21 @@ locals {
   })
 }
 
-resource "coder_script" "pade" {
-  agent_id           = var.agent_id
-  display_name       = "PADE"
-  run_on_start       = true
-  start_blocks_login = true
-
-  script = templatefile("${path.module}/run.sh", {
+locals {
+  install_script = templatefile("${path.module}/scripts/install.sh.tftpl", {
     PADE_VERSION = local.pade_version
     BINDINGS_B64 = base64encode(local.bindings)
   })
+}
+
+module "coder_utils" {
+  source  = "registry.coder.com/coder/coder-utils/coder"
+  version = "0.0.2"
+
+  agent_id            = var.agent_id
+  module_directory    = "$HOME/.coder-modules/after-certainty/pade"
+  display_name_prefix = "PADE"
+  install_script      = local.install_script
 }
 
 output "bindings_path" {
@@ -110,4 +115,9 @@ output "bindings_path" {
 output "pade_version" {
   description = "PADE version installed by the module."
   value       = local.pade_version
+}
+
+output "scripts" {
+  description = "Ordered list of coder exp sync names produced by this module, in run order."
+  value       = module.coder_utils.scripts
 }
