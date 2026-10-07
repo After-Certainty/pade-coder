@@ -111,6 +111,38 @@ The integration is agent-neutral. Cursor, Claude Code, Codex, or a human shell c
 - [x] Existing live evidence establishes GCE-backed Coder → PADE broker identity and fulfillment.
 - [x] Reusable module installs a released PADE CLI and writes broker bindings.
 - [x] Failure boundaries are explicit and fail closed.
-- [ ] Run the new module itself in the GCE-backed Coder workspace and record the safe output from `run.sh`.
+- [x] Run the new module itself in the GCE-backed Coder workspace and record the safe output from `run.sh`.
 
 The final checkbox is intentionally manual because CI does not have the production broker authorization or GCE workload identity.
+
+## Live result (2026-10-06)
+
+Run from the `gcp-pade` Coder template (Debian 12, `e2-medium`, `us-central1-a`) with this module added and `broker_endpoint` set to the deployed broker:
+
+```text
+=== PADE installation ===
+pade version v0.3.0 (0467ed2, built 2026-09-13T02:26:11Z)
+=== GCE workload identity substrate ===
+metadata service account: pade-coder-workspace@after-certainty.iam.gserviceaccount.com
+note: Coder is not the identity provider; PADE uses GCE metadata to mint the broker-audience ID token
+=== PADE configuration ===
+✓ pade.yaml DevelopmentSession/pade-coder-experiment-001 is valid
+✓ capability "github.repo.read" is well formed
+
+Manifest OK.
+Bindings: /home/ksteffe/.config/pade/coder-bindings.yaml
+
+github.repo.read
+  access: use
+  required: true
+  bound: true
+  provider: broker
+  status: configured
+  message: bound; availability unknown until runtime (plan/capabilities do not probe providers)
+  endpoint: https://pade-broker-754719312452.us-central1.run.app
+=== broker-authenticated capability ===
+repo_full_name=After-Certainty/after-certainty
+pade-coder experiment 001: success
+```
+
+The first dogfood run surfaced one defect: the installer and `run.sh` called `pade version`, but PADE v0.3.0 exposes only the `--version` flag. The install itself completed (checksum verified, binary and bindings written) but the Coder startup script exited non-zero. Both now call `pade --version`.
