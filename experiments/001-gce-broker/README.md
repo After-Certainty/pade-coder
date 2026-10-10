@@ -72,7 +72,7 @@ broker returns scoped GitHub material
 ordinary GitHub read succeeds
 ```
 
-The child process receives broker-returned material only for the duration of `pade exec`.
+PADE injects broker-returned material into the child environment and discards its own material maps after the run. Descendants inherit normally, and copied credentials can remain usable after the run until downstream expiration or revocation. This is process-scoped injection, not revocation on exit.
 
 ## Failure behavior
 
