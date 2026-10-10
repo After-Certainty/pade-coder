@@ -236,13 +236,13 @@ describe("pade", () => {
   });
 
   it("installs the requested pade_version", async () => {
-    const { run, sh } = await setup({ pade_version: "0.4.0" });
+    const { run, sh } = await setup({ pade_version: "0.4.1" });
     const result = await run();
     expect(result.exitCode).not.toBe(0);
 
     const requested = await sh("cat /tmp/curl.log");
     expect(requested.stdout.trim()).toBe(
-      "https://github.com/After-Certainty/pade/releases/download/v0.4.0/pade-v0.4.0-linux-amd64.tar.gz",
+      "https://github.com/After-Certainty/pade/releases/download/v0.4.1/pade-v0.4.1-linux-amd64.tar.gz",
     );
   });
 
