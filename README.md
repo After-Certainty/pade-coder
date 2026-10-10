@@ -41,7 +41,7 @@ module "pade" {
   source = "git::https://github.com/After-Certainty/pade-coder.git//modules/pade"
 
   agent_id            = coder_agent.main.id
-  pade_version        = "v0.3.0"
+  pade_version        = "v0.4.0"
   broker_endpoint     = var.pade_broker_endpoint
   broker_identity     = "gce"
   broker_capabilities = ["github.repo.read"]

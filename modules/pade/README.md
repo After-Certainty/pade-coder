@@ -68,7 +68,7 @@ The module accepts every value the current PADE Consumer supports, but only one 
 | ------------------- | -------------------------- | -------------------------------- |
 | Workload identity   | `gce` (GCE metadata)       | `cursor`                         |
 | Workspace OS / arch | Linux `amd64`              | Linux `arm64`                    |
-| PADE version        | `v0.3.0`                   | other released versions          |
+| PADE version        | `v0.4.0`                   | other released versions          |
 | Capability          | `github.repo.read`         | other broker-authorized names    |
 
 Accepting `broker_identity = "cursor"` reflects what PADE supports; it does not mean a Cursor-on-Coder path has been validated.
@@ -94,7 +94,7 @@ module "pade" {
   source              = "registry.coder.com/after-certainty/pade/coder"
   version             = "1.0.0"
   agent_id            = coder_agent.main.id
-  pade_version        = "v0.3.0"
+  pade_version        = "v0.4.0"
   broker_endpoint     = "https://pade-broker.example.com"
   broker_audience     = "pade-broker"
   broker_identity     = "gce"

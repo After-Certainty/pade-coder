@@ -10,8 +10,8 @@ run "defaults" {
   command = plan
 
   assert {
-    condition     = output.pade_version == "v0.3.0"
-    error_message = "pade_version should default to v0.3.0"
+    condition     = output.pade_version == "v0.4.0"
+    error_message = "pade_version should default to v0.4.0"
   }
 
   assert {
@@ -47,7 +47,7 @@ run "defaults" {
   }
 
   assert {
-    condition     = strcontains(local.install_script, "PADE_VERSION='v0.3.0'")
+    condition     = strcontains(local.install_script, "PADE_VERSION='v0.4.0'")
     error_message = "installer should be rendered with the normalized PADE version"
   }
 
