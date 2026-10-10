@@ -17,11 +17,11 @@ variable "agent_id" {
 variable "pade_version" {
   type        = string
   description = "PADE release version to install."
-  default     = "v0.3.0"
+  default     = "v0.4.0"
 
   validation {
     condition     = can(regex("^v?[0-9]+\\.[0-9]+\\.[0-9]+$", var.pade_version))
-    error_message = "pade_version must be a semantic version such as v0.3.0 or 0.3.0."
+    error_message = "pade_version must be a semantic version such as v0.4.0 or 0.3.0."
   }
 }
 

@@ -24,7 +24,7 @@ const IMAGE = "debian:bookworm-slim";
 const STUB_PATH =
   "/stubs:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 const RELEASE_URL =
-  "https://github.com/After-Certainty/pade/releases/download/v0.3.0";
+  "https://github.com/After-Certainty/pade/releases/download/v0.4.0";
 const MODULE_DIR = "/root/.coder-modules/after-certainty/pade";
 const SYNC_NAME = "after-certainty-pade-install_script";
 const BINDINGS_PATH = "/root/.config/pade/coder-bindings.yaml";
@@ -78,15 +78,15 @@ esac
 
 const FIXTURES = `mkdir -p /fixtures
 for arch in amd64 arm64; do
-  dir="/build/$arch/pade-v0.3.0-linux-$arch"
+  dir="/build/$arch/pade-v0.4.0-linux-$arch"
   mkdir -p "$dir"
   cat > "$dir/pade" <<'EOF'
 #!/bin/sh
 echo "$@" >> /tmp/pade.log
-echo "pade v0.3.0"
+echo "pade v0.4.0"
 EOF
   chmod 0755 "$dir/pade"
-  tar -czf "/fixtures/pade-v0.3.0-linux-$arch.tar.gz" -C "/build/$arch" .
+  tar -czf "/fixtures/pade-v0.4.0-linux-$arch.tar.gz" -C "/build/$arch" .
 done
 cd /fixtures && sha256sum pade-*.tar.gz > SHA256SUMS
 `;
@@ -186,7 +186,7 @@ describe("pade", () => {
     ).toString();
     expect(renderedInstaller(instance.script)).toBe(
       template
-        .replace("${PADE_VERSION}", "v0.3.0")
+        .replace("${PADE_VERSION}", "v0.4.0")
         .replace("${BINDINGS_B64}", Buffer.from(bindings).toString("base64")),
     );
     const result = await run();
@@ -207,12 +207,12 @@ describe("pade", () => {
     const { run, sh } = await setup();
     const result = await run();
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain("installing PADE v0.3.0 (linux/amd64)");
-    expect(result.stdout).toContain("pade v0.3.0");
+    expect(result.stdout).toContain("installing PADE v0.4.0 (linux/amd64)");
+    expect(result.stdout).toContain("pade v0.4.0");
 
     const requested = await sh("cat /tmp/curl.log");
     expect(requested.stdout.trim().split("\n")).toEqual([
-      `${RELEASE_URL}/pade-v0.3.0-linux-amd64.tar.gz`,
+      `${RELEASE_URL}/pade-v0.4.0-linux-amd64.tar.gz`,
       `${RELEASE_URL}/SHA256SUMS`,
     ]);
 
@@ -231,7 +231,7 @@ describe("pade", () => {
 
     const requested = await sh("head -n 1 /tmp/curl.log");
     expect(requested.stdout.trim()).toBe(
-      `${RELEASE_URL}/pade-v0.3.0-linux-arm64.tar.gz`,
+      `${RELEASE_URL}/pade-v0.4.0-linux-arm64.tar.gz`,
     );
   });
 
@@ -269,7 +269,7 @@ describe("pade", () => {
   it("fails on a checksum mismatch without installing", async () => {
     const { run, sh } = await setup();
     await sh(
-      "sed -i 's/^[0-9a-f]*\\(  pade-v0.3.0-linux-amd64\\)/0000000000000000000000000000000000000000000000000000000000000000\\1/' /fixtures/SHA256SUMS",
+      "sed -i 's/^[0-9a-f]*\\(  pade-v0.4.0-linux-amd64\\)/0000000000000000000000000000000000000000000000000000000000000000\\1/' /fixtures/SHA256SUMS",
     );
     const result = await run();
     expect(result.exitCode).not.toBe(0);
@@ -284,7 +284,7 @@ describe("pade", () => {
     const result = await run();
     expect(result.exitCode).not.toBe(0);
     expect(result.stdout + result.stderr).toContain(
-      "release checksum does not contain pade-v0.3.0-linux-amd64.tar.gz",
+      "release checksum does not contain pade-v0.4.0-linux-amd64.tar.gz",
     );
     expect((await sh("test -e /root/.local/bin/pade")).exitCode).not.toBe(0);
   });
