@@ -105,3 +105,30 @@ module "pade" {
 ### Using the bindings
 
 New shells pick up `PADE_BINDINGS` automatically. Processes that do not source shell startup files can set `PADE_BINDINGS` to the `bindings_path` output or pass that path to `pade` with `--bindings`.
+
+## Workload identity and credential exposure
+
+`broker_capabilities` creates local resolution configuration, not an authorization
+grant. The broker verifies the runtime assertion and applies server-owned policy
+on every request. Selecting `gce` or `cursor` chooses how the Consumer obtains
+identity; it does not translate Coder user identity into a PADE subject.
+
+GCE workspaces using the same attached service account share the same broker
+subject and its allowed capabilities. Coder workspace-owner metadata and RC
+provenance do not create per-user isolation. Use distinct runtime identities and
+explicit broker policy when that separation is required. The module does not
+restrict access to the GCE metadata server or another runtime's identity socket.
+
+A child receiving credential material can read it and pass it to descendants.
+A copied credential can remain usable after `pade exec` or a workspace ends,
+subject to downstream expiry/revocation. Output redaction is best effort, not a
+sandbox. Reusing a valid workload assertion can obtain fresh material while
+server policy allows it. Keep bootstrap authority off the workspace and scope
+issued authority in downstream IAM.
+
+These boundaries were reviewed at pade-coder
+`3805842e6d8b65a9c8993def2ec45349fe8a0639` (2026-10-09), alongside the PADE
+`docs/security/2026-10-boundary-investigation.md` report. This documentation change
+adds no new identity adapter, grant semantics, or runtime behavior. Existing
+module tests cover supported/unsupported identity selection and broker-only
+bindings; live Coder/GCE validation was not repeated for this review.
