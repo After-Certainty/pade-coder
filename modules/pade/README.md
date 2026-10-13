@@ -61,7 +61,7 @@ The module-managed bindings file is separate from PADE's default `~/.config/pade
 The module exposes three generic integration outputs:
 
 - `bindings_path`: module-managed `~/.config/pade/coder-bindings.yaml` file (expand `~` to the workspace user's home in filesystem operations).
-- `broker_binding`: non-secret, operator-configured `provider: broker` template with endpoint, audience, and runtime identity adapter. It is *not* an authorization grant.
+- `broker_binding`: non-secret, operator-configured `provider: broker` template with endpoint, audience, and runtime identity adapter. It is _not_ an authorization grant.
 - `scripts`: Coder synchronization names. A dependent Coder script can use `coder exp sync want <self> ${join(" ", module.pade.scripts)}` to wait until PADE installation has finished.
 
 A Coder template may omit the static capabilities:
@@ -79,7 +79,6 @@ A separately owned **trusted downstream integration** should verify or validate 
 In dynamic mode, PADE's installer writes the empty map before any network download and again after installation, removing stale bindings even if a subsequent download fails. It intentionally does **not** install `rc-pade` or interpret Runtime Conditions; that belongs in an optional downstream Coder integration. The local file is workspace-user-writable, not a security isolation boundary. The broker still authenticates and authorizes each request; runtime isolation and downstream IAM are separate responsibilities.
 
 Existing static templates remain compatible. This change does not alter PADE's protocol, broker policy, workload identity, or provider authority.
-
 
 ## Prerequisites
 
