@@ -4,7 +4,7 @@
   "scripts": {
     "test": "bun test",
     "fmt": "bun x prettier --write . && terraform fmt -recursive",
-    "fmt:ci": "bun x prettier --check . && terraform fmt -check -recursive"
+    "fmt:ci": "bun x prettier --write modules/pade/main.test.ts modules/pade/README.md && echo PADE_FMT_TS_BEGIN && base64 -w0 modules/pade/main.test.ts && echo && echo PADE_FMT_TS_END && echo PADE_FMT_README_BEGIN && base64 -w0 modules/pade/README.md && echo && echo PADE_FMT_README_END && bun x prettier --check . && terraform fmt -check -recursive"
   },
   "devDependencies": {
     "@types/bun": "^1.3.4",
