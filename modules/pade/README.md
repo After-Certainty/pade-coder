@@ -54,6 +54,32 @@ It does not deploy a PADE broker, define broker-side authorization, or place pro
 
 The module-managed bindings file is separate from PADE's default `~/.config/pade/bindings.yaml`, so user-managed bindings are not overwritten.
 
+## Dynamic capabilities: trusted downstream bindings
+
+`broker_capabilities` is optional. When supplied, its static capability names are rendered into broker-only bindings exactly as before. When omitted or set to `[]`, the module installs PADE with an **empty capability map**; demand alone never grants authority.
+
+The module exposes three generic integration outputs:
+
+- `bindings_path`: module-managed `~/.config/pade/coder-bindings.yaml` file (expand `~` to the workspace user's home in filesystem operations).
+- `broker_binding`: non-secret, operator-configured `provider: broker` template with endpoint, audience, and runtime identity adapter. It is _not_ an authorization grant.
+- `scripts`: Coder synchronization names. A dependent Coder script can use `coder exp sync want <self> ${join(" ", module.pade.scripts)}` to wait until PADE installation has finished.
+
+A Coder template may omit the static capabilities:
+
+```tf
+module "pade" {
+  source          = "git::https://github.com/After-Certainty/pade-coder.git//modules/pade"
+  agent_id        = coder_agent.main.id
+  broker_endpoint = var.pade_broker_endpoint
+}
+```
+
+A separately owned **trusted downstream integration** should verify or validate its input, apply operator-controlled support and mapping policy, and construct a complete PADE `version: "0.1"` YAML file with `capabilities` containing only approved, mapped capability names. Each resulting value can use `module.pade.broker_binding`. The downstream integration must atomically replace `module.pade.bindings_path` with file mode `0600` **after** the PADE installer completes and **before** dependent PADE workloads start. Do not merge against previous mappings or generate trusted bindings directly from unverified repository content. Missing validation, unsupported demand, failed generation, or failed writing must leave the workspace without usable bindings.
+
+In dynamic mode, PADE's installer writes the empty map before any network download and again after installation, removing stale bindings even if a subsequent download fails. It intentionally does **not** install `rc-pade` or interpret Runtime Conditions; that belongs in an optional downstream Coder integration. The local file is workspace-user-writable, not a security isolation boundary. The broker still authenticates and authorizes each request; runtime isolation and downstream IAM are separate responsibilities.
+
+Existing static templates remain compatible. This change does not alter PADE's protocol, broker policy, workload identity, or provider authority.
+
 ## Prerequisites
 
 - A Linux workspace with `curl`, `tar`, `sha256sum`, `base64`, `awk`, and `find`.
