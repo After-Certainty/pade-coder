@@ -191,7 +191,8 @@ describe("pade", () => {
     expect(renderedInstaller(instance.script)).toBe(
       template
         .replace("${PADE_VERSION}", "v0.4.0")
-        .replace("${BINDINGS_B64}", Buffer.from(bindings).toString("base64")),
+        .replace("${BINDINGS_B64}", Buffer.from(bindings).toString("base64"))
+        .replace("${DYNAMIC_BINDINGS}", "0"),
     );
     const result = await run();
     expect(result.exitCode).toBe(0);
@@ -370,6 +371,26 @@ chmod 600 ${BINDINGS_PATH}`);
     // On restart, the installer must clear stale downstream bindings,
     // so a failed or missing downstream writer cannot retain old access.
     expect((await run()).exitCode).toBe(0);
+    expect(Bun.YAML.parse(await readFileContainer(id, BINDINGS_PATH))).toEqual({
+      version: "0.1",
+      capabilities: {},
+    });
+
+    // Also revoke stale bindings when the next download fails before install.
+    expect(writer.exitCode).toBe(0);
+    await sh(`cat > ${BINDINGS_PATH} <<'EOF'
+version: "0.1"
+capabilities:
+  stale.capability:
+    provider: broker
+    broker:
+      endpoint: https://broker.example.com
+      audience: https://broker.example.com
+      identity: gce
+EOF
+chmod 600 ${BINDINGS_PATH}`);
+    await sh("sed -i '/linux-amd64/d' /fixtures/SHA256SUMS");
+    expect((await run()).exitCode).not.toBe(0);
     expect(Bun.YAML.parse(await readFileContainer(id, BINDINGS_PATH))).toEqual({
       version: "0.1",
       capabilities: {},
