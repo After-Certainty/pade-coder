@@ -94,7 +94,8 @@ locals {
 locals {
   install_script = templatefile("${path.module}/scripts/install.sh.tftpl", {
     PADE_VERSION = local.pade_version
-    BINDINGS_B64 = base64encode(local.bindings)
+    BINDINGS_B64    = base64encode(local.bindings)
+    DYNAMIC_BINDINGS = length(var.broker_capabilities) == 0 ? "1" : "0"
   })
 }
 
