@@ -327,7 +327,10 @@ describe("pade", () => {
 
   it("supports trusted downstream bindings without a Terraform-time capability list", async () => {
     // A caller can omit broker_capabilities entirely rather than supplying [].
-    const noStaticState = await runTerraformApply(import.meta.dir, requiredVars);
+    const noStaticState = await runTerraformApply(
+      import.meta.dir,
+      requiredVars,
+    );
     expect(noStaticState.outputs.broker_binding.value).toEqual({
       provider: "broker",
       broker: {
@@ -343,9 +346,7 @@ describe("pade", () => {
       await readFileContainer(id, BINDINGS_PATH),
     );
     expect(initiallyEmpty).toEqual({ version: "0.1", capabilities: {} });
-    expect((await sh(`stat -c %a ${BINDINGS_PATH}`)).stdout.trim()).toBe(
-      "600",
-    );
+    expect((await sh(`stat -c %a ${BINDINGS_PATH}`)).stdout.trim()).toBe("600");
 
     // A trusted downstream script runs only after module.pade.scripts.
     // It owns the entire replacement file; portable intent is not trusted.
