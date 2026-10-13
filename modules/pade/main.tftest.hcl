@@ -64,6 +64,11 @@ run "defaults" {
   }
 
   assert {
+    condition     = strcontains(local.install_script, "DYNAMIC_BINDINGS='0'")
+    error_message = "static bindings should keep the existing install behavior"
+  }
+
+  assert {
     condition     = strcontains(local.install_script, "BINDINGS_B64='${base64encode(local.bindings)}'")
     error_message = "installer should embed the generated bindings"
   }
@@ -194,6 +199,11 @@ run "empty_capabilities" {
   assert {
     condition     = yamldecode(local.bindings).capabilities == {}
     error_message = "an empty capability set must produce a fail-closed empty bindings map"
+  }
+
+  assert {
+    condition     = strcontains(local.install_script, "DYNAMIC_BINDINGS='1'")
+    error_message = "the installer must clear stale bindings before downloads in downstream-managed mode"
   }
 
   assert {
