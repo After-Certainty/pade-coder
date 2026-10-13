@@ -32,6 +32,10 @@ const BINDINGS_PATH = "/root/.config/pade/coder-bindings.yaml";
 const requiredVars = {
   agent_id: "foo",
   broker_endpoint: "https://broker.example.com",
+};
+
+const staticVars = {
+  ...requiredVars,
   broker_capabilities: '["github.repo.read"]',
 };
 
@@ -107,7 +111,7 @@ const setup = async (
   const state = await runTerraformApply(
     import.meta.dir,
     {
-      ...requiredVars,
+      ...staticVars,
       ...vars,
     },
     customEnv,
@@ -317,6 +321,58 @@ describe("pade", () => {
         "github.repo.read": { provider: "broker", broker },
         "example.capability": { provider: "broker", broker },
       },
+    });
+  });
+
+  it("supports trusted downstream bindings without a Terraform-time capability list", async () => {
+    // A caller can omit broker_capabilities entirely rather than supplying [].
+    const noStaticState = await runTerraformApply(import.meta.dir, requiredVars);
+    expect(noStaticState.outputs.broker_binding.value).toEqual({
+      provider: "broker",
+      broker: {
+        endpoint: "https://broker.example.com",
+        audience: "https://broker.example.com",
+        identity: "gce",
+      },
+    });
+
+    const { id, run, sh } = await setup({ broker_capabilities: "[]" });
+    expect((await run()).exitCode).toBe(0);
+    const initiallyEmpty = Bun.YAML.parse(
+      await readFileContainer(id, BINDINGS_PATH),
+    );
+    expect(initiallyEmpty).toEqual({ version: "0.1", capabilities: {} });
+    expect((await sh(`stat -c %a ${BINDINGS_PATH}`)).stdout.trim()).toBe(
+      "600",
+    );
+
+    // A trusted downstream script runs only after module.pade.scripts.
+    // It owns the entire replacement file; portable intent is not trusted.
+    const writer = await sh(`cat > ${BINDINGS_PATH} <<'EOF'
+version: "0.1"
+capabilities:
+  github.repo.read:
+    provider: broker
+    broker:
+      endpoint: https://broker.example.com
+      audience: https://broker.example.com
+      identity: gce
+EOF
+chmod 600 ${BINDINGS_PATH}`);
+    expect(writer.exitCode).toBe(0);
+    expect(Bun.YAML.parse(await readFileContainer(id, BINDINGS_PATH))).toEqual({
+      version: "0.1",
+      capabilities: {
+        "github.repo.read": noStaticState.outputs.broker_binding.value,
+      },
+    });
+
+    // On restart, the installer must clear stale downstream bindings,
+    // so a failed or missing downstream writer cannot retain old access.
+    expect((await run()).exitCode).toBe(0);
+    expect(Bun.YAML.parse(await readFileContainer(id, BINDINGS_PATH))).toEqual({
+      version: "0.1",
+      capabilities: {},
     });
   });
 
