@@ -39,6 +39,9 @@ jobs:
       - name: ShellCheck installer
         run: shellcheck --severity=warning modules/pade/scripts/install.sh.tftpl
 
+      - name: Check Experiment 001 smoke shell syntax
+        run: bash -n experiments/001-gce-broker/run.sh
+
   installer:
     runs-on: ubuntu-latest
     steps:
