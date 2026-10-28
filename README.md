@@ -41,7 +41,7 @@ module "pade" {
   source = "git::https://github.com/After-Certainty/pade-coder.git//modules/pade"
 
   agent_id            = coder_agent.main.id
-  pade_version        = "v0.4.0"
+  pade_version        = "v0.4.1"
   broker_endpoint     = var.pade_broker_endpoint
   broker_identity     = "gce"
   broker_capabilities = ["github.repo.read"]
@@ -50,7 +50,9 @@ module "pade" {
 
 The module installs the released PADE CLI, verifies its release checksum, and writes a separate module-managed binding at `~/.config/pade/coder-bindings.yaml`.
 
-See [modules/pade/README.md](modules/pade/README.md) for the current contract.
+The module now defaults to **PADE v0.4.1**; the first live Coder/GCE dogfood result below remains a historical v0.3.0 run. The version bump has automated installer/Terraform coverage but does not claim a new live broker smoke test.
+
+See [modules/pade/README.md](modules/pade/README.md) for the current contract and v0.4.1 live smoke instructions.
 
 ## Experiments
 
