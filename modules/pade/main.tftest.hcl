@@ -59,7 +59,7 @@ run "defaults" {
   }
 
   assert {
-    condition     = strcontains(local.install_script, "PADE_VERSION='v0.4.0'")
+    condition     = strcontains(local.install_script, "PADE_VERSION='v0.4.1'")
     error_message = "installer should be rendered with the normalized PADE version"
   }
 
