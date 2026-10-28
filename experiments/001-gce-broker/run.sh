@@ -15,7 +15,12 @@ command -v curl >/dev/null 2>&1 || die "curl is required"
 test -f "$BINDINGS" || die "module-managed bindings not found at $BINDINGS"
 
 echo "=== PADE installation ==="
-pade --version
+version_output="$(pade --version)" || die "unable to read installed PADE version"
+printf '%s\n' "$version_output"
+if [[ -n "${PADE_CODER_EXPECTED_VERSION:-}" ]]; then
+  [[ "$version_output" == "pade version ${PADE_CODER_EXPECTED_VERSION} ("* ]] \
+    || die "expected PADE ${PADE_CODER_EXPECTED_VERSION}, found: $version_output"
+fi
 
 echo "=== GCE workload identity substrate ==="
 metadata_email="$(curl -fsS -H 'Metadata-Flavor: Google' \
@@ -33,7 +38,7 @@ grep -q 'github.repo.read' <<<"$caps" || die "github.repo.read is not configured
 grep -q 'provider: broker' <<<"$caps" || die "github.repo.read is not configured for broker resolution"
 
 echo "=== broker-authenticated capability ==="
-pade exec -f "$ROOT/pade.yaml" --bindings "$BINDINGS" \
+env -u GITHUB_TOKEN -u GH_TOKEN pade exec -f "$ROOT/pade.yaml" --bindings "$BINDINGS" \
   --capability github.repo.read --quiet -- \
   sh -eu -c '
     test -n "${GITHUB_TOKEN:-}" || {
