@@ -103,7 +103,6 @@ Accepting `broker_identity = "cursor"` reflects what PADE supports; it does not 
 
 See [the GCE v0.4.1 follow-up runbook](../../experiments/001-gce-broker/v041-followup.md) for Coder template update steps, a version-gated authenticated smoke, and evidence hygiene.
 
-
 The module's **default** PADE release is v0.4.1. Existing templates that explicitly
 set `pade_version = "v0.3.0"` or `"v0.4.0"` remain pinned until the template
 owner changes that input. This module does not automatically update running
@@ -114,7 +113,7 @@ existing manual smoke test from a fresh Coder workspace shell:
 
 ```bash
 pade --version
-bash experiments/001-gce-broker/run.sh
+PADE_CODER_EXPECTED_VERSION=v0.4.1 bash experiments/001-gce-broker/run.sh
 ```
 
 The script checks GCE metadata workload identity and broker-mediated
