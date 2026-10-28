@@ -94,10 +94,31 @@ The module accepts every value the current PADE Consumer supports, but only one 
 | ------------------- | -------------------------- | -------------------------------- |
 | Workload identity   | `gce` (GCE metadata)       | `cursor`                         |
 | Workspace OS / arch | Linux `amd64`              | Linux `arm64`                    |
-| PADE version        | `v0.4.0`                   | other released versions          |
+| PADE version        | `v0.3.0` (live); `v0.4.1` (installer tests) | v0.4.1 end-to-end broker fulfillment |
 | Capability          | `github.repo.read`         | other broker-authorized names    |
 
 Accepting `broker_identity = "cursor"` reflects what PADE supports; it does not mean a Cursor-on-Coder path has been validated.
+
+## PADE v0.4.1 upgrade validation
+
+The module's **default** PADE release is v0.4.1. Existing templates that explicitly
+set `pade_version = "v0.3.0"` or `"v0.4.0"` remain pinned until the template
+owner changes that input. This module does not automatically update running
+workspaces or reconfigure Cloud Run.
+
+After updating the Coder template and the GCE-backed workspace, run the
+existing manual smoke test from a fresh Coder workspace shell:
+
+```bash
+pade --version
+bash experiments/001-gce-broker/run.sh
+```
+
+The script checks GCE metadata workload identity and broker-mediated
+`github.repo.read` against the configured endpoint. Do not log ID tokens
+or provider credentials. Record any new v0.4.1 result separately from the
+original 2026-10-06 Experiment 001 evidence. GitHub Actions tests installation
+and Terraform bindings only; it has no authenticated GCE workload identity.
 
 ## Identity boundary
 
@@ -120,7 +141,7 @@ module "pade" {
   source              = "registry.coder.com/after-certainty/pade/coder"
   version             = "1.0.0"
   agent_id            = coder_agent.main.id
-  pade_version        = "v0.4.0"
+  pade_version        = "v0.4.1"
   broker_endpoint     = "https://pade-broker.example.com"
   broker_audience     = "pade-broker"
   broker_identity     = "gce"

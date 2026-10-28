@@ -10,8 +10,8 @@ run "defaults" {
   command = plan
 
   assert {
-    condition     = output.pade_version == "v0.4.0"
-    error_message = "pade_version should default to v0.4.0"
+    condition     = output.pade_version == "v0.4.1"
+    error_message = "pade_version should default to v0.4.1"
   }
 
   assert {
