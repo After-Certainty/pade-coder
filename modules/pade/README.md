@@ -90,12 +90,12 @@ Existing static templates remain compatible. This change does not alter PADE's p
 
 The module accepts every value the current PADE Consumer supports, but only one path has been validated end to end through this module:
 
-| Dimension           | Proven through this module | Accepted, not yet validated here |
-| ------------------- | -------------------------- | -------------------------------- |
-| Workload identity   | `gce` (GCE metadata)       | `cursor`                         |
-| Workspace OS / arch | Linux `amd64`              | Linux `arm64`                    |
-| PADE version        | `v0.3.0` (live); `v0.4.1` (installer tests) | v0.4.1 end-to-end broker fulfillment |
-| Capability          | `github.repo.read`         | other broker-authorized names    |
+| Dimension           | Proven through this module                    | Accepted, not yet validated here        |
+| ------------------- | --------------------------------------------- | --------------------------------------- |
+| Workload identity   | `gce` (GCE metadata)                          | `cursor`                                |
+| Workspace OS / arch | Linux `amd64`                                 | Linux `arm64`                           |
+| PADE version        | `v0.3.0` live; `v0.4.1` installer tests         | v0.4.1 end-to-end broker fulfillment    |
+| Capability          | `github.repo.read`                            | other broker-authorized names           |
 
 Accepting `broker_identity = "cursor"` reflects what PADE supports; it does not mean a Cursor-on-Coder path has been validated.
 

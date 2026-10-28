@@ -50,7 +50,9 @@ module "pade" {
 
 The module installs the released PADE CLI, verifies its release checksum, and writes a separate module-managed binding at `~/.config/pade/coder-bindings.yaml`.
 
-The module now defaults to **PADE v0.4.1**; the first live Coder/GCE dogfood result below remains a historical v0.3.0 run. The version bump has automated installer/Terraform coverage but does not claim a new live broker smoke test.\n\nSee [modules/pade/README.md](modules/pade/README.md) for the current contract and v0.4.1 live smoke instructions.
+The module now defaults to **PADE v0.4.1**; the first live Coder/GCE dogfood result below remains a historical v0.3.0 run. The version bump has automated installer/Terraform coverage but does not claim a new live broker smoke test.
+
+See [modules/pade/README.md](modules/pade/README.md) for the current contract and v0.4.1 live smoke instructions.
 
 ## Experiments
 

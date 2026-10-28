@@ -88,8 +88,9 @@ for version in v0.4.1 v0.4.0; do
     cat > "$dir/pade" <<'EOF'
 #!/bin/sh
 echo "$@" >> /tmp/pade.log
-echo "pade $version"
+echo "pade __TEST_PADE_VERSION__"
 EOF
+    sed -i "s/__TEST_PADE_VERSION__/$version/g" "$dir/pade"
     chmod 0755 "$dir/pade"
     tar -czf "/fixtures/pade-$version-linux-$arch.tar.gz" -C "/build/$version/$arch" .
   done
