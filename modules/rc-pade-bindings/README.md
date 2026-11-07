@@ -86,7 +86,7 @@ A workload that requires the generated bindings should wait on this module:
 ```tf
 resource "coder_script" "workload" {
   agent_id = coder_agent.main.id
-  script = <<-EOT
+  script   = <<-EOT
     #!/usr/bin/env bash
     set -euo pipefail
     coder exp sync want workload-ready ${join(" ", module.rc_pade_bindings.scripts)}
