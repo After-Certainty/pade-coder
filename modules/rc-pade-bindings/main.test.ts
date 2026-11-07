@@ -70,7 +70,7 @@ done
 [ -n "$broker" ] || exit 4
 cp "$broker" /tmp/broker-captured.json
 
-if [ "${RC_PADE_FAIL:-0}" = "1" ]; then
+if [ "\${RC_PADE_FAIL:-0}" = "1" ]; then
   exit 42
 fi
 
