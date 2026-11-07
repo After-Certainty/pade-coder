@@ -24,20 +24,34 @@ jobs:
       - name: Check formatting
         run: terraform fmt -check -recursive
 
-      - name: Initialize module
+      - name: Initialize PADE module
         working-directory: modules/pade
         run: terraform init -upgrade -backend=false
 
-      - name: Validate module
+      - name: Validate PADE module
         working-directory: modules/pade
         run: terraform validate
 
-      - name: Test module
+      - name: Test PADE module
         working-directory: modules/pade
         run: terraform test -verbose
 
-      - name: ShellCheck installer
-        run: shellcheck --severity=warning modules/pade/scripts/install.sh.tftpl
+      - name: Initialize RC → PADE bindings module
+        working-directory: modules/rc-pade-bindings
+        run: terraform init -upgrade -backend=false
+
+      - name: Validate RC → PADE bindings module
+        working-directory: modules/rc-pade-bindings
+        run: terraform validate
+
+      - name: Test RC → PADE bindings module
+        working-directory: modules/rc-pade-bindings
+        run: terraform test -verbose
+
+      - name: ShellCheck module scripts
+        run: |
+          shellcheck --severity=warning modules/pade/scripts/install.sh.tftpl
+          shellcheck --severity=warning modules/rc-pade-bindings/scripts/bind.sh.tftpl
 
       - name: Check Experiment 001 smoke shell syntax
         run: bash -n experiments/001-gce-broker/run.sh
