@@ -2,10 +2,17 @@
 
 ## Status
 
-**Not yet executed from the GCE Coder workspace.** This runbook is for a new,
-dated check of the released PADE v0.4.1 consumer with the deployed PADE broker.
-The [Experiment 001 historical results](README.md) from October 6, 2026
-remain unchanged and must not be relabeled as v0.4.1.
+**The Experiment 001-specific static rerun has not been executed.** This runbook
+remains the procedure for a new, dated replay of that original module path with
+the released PADE v0.4.1 consumer.
+
+Separately, later cross-repository `rc-pade` Experiments 013–014 exercised the
+same pade-coder dynamic module-managed bindings contract in the GCE-backed Coder
+environment with PADE v0.4.1. Experiment 014 recorded signed handoff
+verification, broker-authorized `github.repo.read`, and broker-denied
+`github.repo.write`. That newer evidence does not rewrite the
+[Experiment 001 historical results](README.md) from October 6, 2026 or turn
+them into a v0.4.1 run.
 
 ## 1. Update the actual Coder template
 
@@ -77,7 +84,7 @@ capability, actual live result, and any safely redacted error code.
 Do **not** record bearer/JWT strings, `GITHUB_TOKEN`, other provider
 credentials, account IDs or numeric Google subject values.
 
-| Check | Status before authorized run |
+| Check | Status before Experiment 001-specific authorized rerun |
 | --- | --- |
 | Template applied and Coder workspace restarted | Not verified |
 | PADE v0.4.1 installed in actual workspace | Not verified |
