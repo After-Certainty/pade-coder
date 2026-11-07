@@ -22,7 +22,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Check formatting
-        run: terraform fmt -check -recursive
+        run: terraform fmt -check -diff -recursive
 
       - name: Initialize PADE module
         working-directory: modules/pade
