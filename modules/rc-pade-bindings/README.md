@@ -77,7 +77,7 @@ module "rc_pade_bindings" {
     "rc-pade-install",
   ]
 
-  rc_pade_command = "$HOME/.local/bin/rc-pade"
+  rc_pade_command = "~/.local/bin/rc-pade"
 }
 ```
 
