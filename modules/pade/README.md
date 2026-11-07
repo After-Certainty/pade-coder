@@ -94,12 +94,12 @@ Existing static templates remain compatible. This change does not alter PADE's p
 
 The original Experiment 001 module dogfood proved one static path. Later `rc-pade` Experiments 013–014 reused this module's dynamic outputs and module-managed bindings in the same GCE-backed Coder environment.
 
-| Dimension           | Proven evidence | Accepted, not yet validated here |
-| ------------------- | --------------- | -------------------------------- |
-| Workload identity   | `gce` (GCE metadata) | `cursor` |
-| Workspace OS / arch | Linux `amd64` | Linux `arm64` |
-| PADE version        | `v0.3.0` static Experiment 001; `v0.4.1` later dynamic module-managed path | other PADE releases |
-| Capability          | `github.repo.read` authorized; `github.repo.write` locally bound and broker-denied in later dynamic evidence | other broker-authorized names |
+| Dimension           | Proven evidence                                                                                              | Accepted, not yet validated here |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| Workload identity   | `gce` (GCE metadata)                                                                                         | `cursor`                         |
+| Workspace OS / arch | Linux `amd64`                                                                                                | Linux `arm64`                    |
+| PADE version        | `v0.3.0` static Experiment 001; `v0.4.1` later dynamic module-managed path                                   | other PADE releases              |
+| Capability          | `github.repo.read` authorized; `github.repo.write` locally bound and broker-denied in later dynamic evidence | other broker-authorized names    |
 
 Accepting `broker_identity = "cursor"` reflects what PADE supports; it does not mean a Cursor-on-Coder path has been validated.
 
