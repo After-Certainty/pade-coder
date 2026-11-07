@@ -79,9 +79,7 @@ jobs:
         run: bun x tsc --noEmit
 
       - name: Check formatting
-        run: |
-          bun x prettier --write .
-          git diff --exit-code
+        run: bun run fmt:ci
 
       - name: Run installer tests
         run: bun test
