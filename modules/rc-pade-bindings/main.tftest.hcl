@@ -31,7 +31,7 @@ run "defaults" {
   }
 
   assert {
-    condition     = local.dependency_scripts == ["after-certainty-pade-install_script"]
+    condition     = local.dependency_scripts == tolist(["after-certainty-pade-install_script"])
     error_message = "the binding script must always depend on the PADE install pipeline"
   }
 
@@ -72,11 +72,11 @@ run "additional_prerequisites" {
   }
 
   assert {
-    condition = local.dependency_scripts == [
+    condition = local.dependency_scripts == tolist([
       "after-certainty-pade-install_script",
       "rc-handoff-verify",
       "rc-pade-install",
-    ]
+    ])
     error_message = "verification and rc-pade installation sync points should serialize before binding"
   }
 }
