@@ -76,7 +76,11 @@ module "pade" {
 
 A separately owned **trusted downstream integration** should verify or validate its input, apply operator-controlled support and mapping policy, and construct a complete PADE `version: "0.1"` YAML file with `capabilities` containing only approved, mapped capability names. Each resulting value can use `module.pade.broker_binding`. The downstream integration must atomically replace `module.pade.bindings_path` with file mode `0600` **after** the PADE installer completes and **before** dependent PADE workloads start. Do not merge against previous mappings or generate trusted bindings directly from unverified repository content. Missing validation, unsupported demand, failed generation, or failed writing must leave the workspace without usable bindings.
 
-In dynamic mode, PADE's installer writes the empty map before any network download and again after installation, removing stale bindings even if a subsequent download fails. It intentionally does **not** install `rc-pade` or interpret Runtime Conditions; that belongs in an optional downstream Coder integration. The local file is workspace-user-writable, not a security isolation boundary. The broker still authenticates and authorizes each request; runtime isolation and downstream IAM are separate responsibilities.
+In dynamic mode, PADE's installer writes the empty map before any network download and again after installation, removing stale bindings even if a subsequent download fails. It intentionally does **not** install `rc-pade` or interpret Runtime Conditions.
+
+For Runtime Conditions consumers, this repository now provides the separate optional [`modules/rc-pade-bindings`](../rc-pade-bindings/) helper. That helper accepts only an already-verified Profile path, waits on caller-owned verification/installation sync points, and invokes the current `rc-pade bind` interface using `module.pade.broker_binding` and `module.pade.bindings_path`. Validation and signing semantics remain outside this module.
+
+The local file is workspace-user-writable, not a security isolation boundary. The broker still authenticates and authorizes each request; runtime isolation and downstream IAM are separate responsibilities.
 
 Existing static templates remain compatible. This change does not alter PADE's protocol, broker policy, workload identity, or provider authority.
 
@@ -88,20 +92,20 @@ Existing static templates remain compatible. This change does not alter PADE's p
 
 ## Proven vs. accepted
 
-The module accepts every value the current PADE Consumer supports, but only one path has been validated end to end through this module:
+The original Experiment 001 module dogfood proved one static path. Later `rc-pade` Experiments 013–014 reused this module's dynamic outputs and module-managed bindings in the same GCE-backed Coder environment.
 
-| Dimension           | Proven through this module               | Accepted, not yet validated here |
-| ------------------- | ---------------------------------------- | -------------------------------- |
-| Workload identity   | `gce` (GCE metadata)                     | `cursor`                         |
-| Workspace OS / arch | Linux `amd64`                            | Linux `arm64`                    |
-| PADE version        | `v0.3.0` (live); `v0.4.1` (installer CI) | v0.4.1 live broker validation    |
-| Capability          | `github.repo.read`                       | other broker-authorized names    |
+| Dimension           | Proven evidence                                                                                              | Accepted, not yet validated here |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| Workload identity   | `gce` (GCE metadata)                                                                                         | `cursor`                         |
+| Workspace OS / arch | Linux `amd64`                                                                                                | Linux `arm64`                    |
+| PADE version        | `v0.3.0` static Experiment 001; `v0.4.1` later dynamic module-managed path                                   | other PADE releases              |
+| Capability          | `github.repo.read` authorized; `github.repo.write` locally bound and broker-denied in later dynamic evidence | other broker-authorized names    |
 
 Accepting `broker_identity = "cursor"` reflects what PADE supports; it does not mean a Cursor-on-Coder path has been validated.
 
 ## PADE v0.4.1 upgrade validation
 
-See [the GCE v0.4.1 follow-up runbook](../../experiments/001-gce-broker/v041-followup.md) for Coder template update steps, a version-gated authenticated smoke, and evidence hygiene.
+See [the GCE v0.4.1 follow-up runbook](../../experiments/001-gce-broker/v041-followup.md) for the still-unrepeated **Experiment 001-specific static smoke**. Separately, [`rc-pade` Experiment 014](https://github.com/After-Certainty/rc-pade/tree/main/experiments/014-signed-validation-handoff) recorded a live PADE v0.4.1 GCE/Coder path using this module's dynamic, module-managed bindings.
 
 The module's **default** PADE release is v0.4.1. Existing templates that explicitly
 set `pade_version = "v0.3.0"` or `"v0.4.0"` remain pinned until the template
@@ -177,7 +181,7 @@ issued authority in downstream IAM.
 
 These boundaries were reviewed at pade-coder
 `3805842e6d8b65a9c8993def2ec45349fe8a0639` (2026-10-09), alongside the PADE
-`docs/security/2026-10-boundary-investigation.md` report. This documentation change
-adds no new identity adapter, grant semantics, or runtime behavior. Existing
-module tests cover supported/unsupported identity selection and broker-only
-bindings; live Coder/GCE validation was not repeated for this review.
+`docs/security/2026-10-boundary-investigation.md` report. Existing module tests
+cover supported/unsupported identity selection and broker-only bindings. Later
+cross-repository experiments added live dynamic-bindings evidence without
+changing the identity or authorization boundary described here.

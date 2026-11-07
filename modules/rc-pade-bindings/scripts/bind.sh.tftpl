@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+decode() {
+  printf '%s' "$1" | base64 -d
+}
+
+expand_path() {
+  case "$1" in
+    \~/*)
+      printf '%s/%s\n' "$HOME" "$(printf '%s' "$1" | cut -c3-)"
+      ;;
+    /*)
+      printf '%s\n' "$1"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+SYNC_NAME="$(decode '${SYNC_NAME_B64}')"
+DEPENDENCY_SCRIPTS='${DEPENDENCY_SCRIPTS}'
+VERIFIED_PROFILE="$(expand_path "$(decode '${VERIFIED_PROFILE_PATH_B64}')")"
+POLICY="$(expand_path "$(decode '${POLICY_PATH_B64}')")"
+ALLOW_CAPABILITIES="$(decode '${ALLOW_CAPABILITIES_B64}')"
+BINDINGS_PATH="$(expand_path "$(decode '${BINDINGS_PATH_B64}')")"
+RC_PADE_COMMAND="$(decode '${RC_PADE_COMMAND_B64}')"
+SESSION_OUT_RAW="$(decode '${SESSION_OUT_B64}')"
+
+# The PADE installer must finish first so dynamic mode has already revoked stale
+# bindings. Additional prerequisites can include handoff verification and an
+# rc-pade installer. Safe sync-name validation in Terraform makes word splitting
+# intentional here.
+# shellcheck disable=SC2086
+coder exp sync want "$SYNC_NAME" $DEPENDENCY_SCRIPTS
+coder exp sync start "$SYNC_NAME"
+
+# Revoke again at this integration boundary before any later failure. This
+# protects manual reruns and failures such as a missing rc-pade binary.
+bindings_dir="$(dirname "$BINDINGS_PATH")"
+mkdir -p "$bindings_dir"
+bindings_tmp="$(mktemp "$bindings_dir/.rc-pade-bindings.XXXXXX")"
+chmod 0600 "$bindings_tmp"
+printf 'version: "0.1"\ncapabilities: {}\n' >"$bindings_tmp"
+mv -f "$bindings_tmp" "$BINDINGS_PATH"
+
+if [ ! -f "$VERIFIED_PROFILE" ]; then
+  echo "verified Profile is missing: $VERIFIED_PROFILE" >&2
+  exit 1
+fi
+if [ ! -f "$POLICY" ]; then
+  echo "projection policy is missing: $POLICY" >&2
+  exit 1
+fi
+
+case "$RC_PADE_COMMAND" in
+  \~/*|/*)
+    RC_PADE_BIN="$(expand_path "$RC_PADE_COMMAND")"
+    ;;
+  */*)
+    echo "rc_pade_command paths must be absolute or start with ~/: $RC_PADE_COMMAND" >&2
+    exit 1
+    ;;
+  *)
+    RC_PADE_BIN="$(command -v "$RC_PADE_COMMAND" || true)"
+    ;;
+esac
+if [ -z "$RC_PADE_BIN" ] || [ ! -x "$RC_PADE_BIN" ]; then
+  echo "rc-pade executable is unavailable: $RC_PADE_COMMAND" >&2
+  exit 1
+fi
+
+module_dir="$HOME/.coder-modules/after-certainty/rc-pade-bindings"
+mkdir -p "$module_dir"
+chmod 0700 "$module_dir"
+broker_file="$module_dir/broker-binding.json"
+printf '%s' '${BROKER_BINDING_B64}' | base64 -d >"$broker_file"
+chmod 0600 "$broker_file"
+
+args=(
+  bind
+  --verified-profile "$VERIFIED_PROFILE"
+  --policy "$POLICY"
+  --broker-binding "$broker_file"
+  --allow-capabilities "$ALLOW_CAPABILITIES"
+  --output "$BINDINGS_PATH"
+)
+
+if [ -n "$SESSION_OUT_RAW" ]; then
+  SESSION_OUT="$(expand_path "$SESSION_OUT_RAW")"
+  args+=(--session-out "$SESSION_OUT")
+fi
+
+"$RC_PADE_BIN" "$${args[@]}"
+
+coder exp sync complete "$SYNC_NAME"
