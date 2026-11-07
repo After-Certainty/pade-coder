@@ -44,7 +44,7 @@ variable "allow_capabilities" {
       for capability in var.allow_capabilities :
       capability != "" &&
       trimspace(capability) == capability &&
-      !strcontains(capability, ",")
+      length(regexall(",", capability)) == 0
     ])
     error_message = "allow_capabilities must contain non-empty, whitespace-trimmed capability names without commas."
   }
