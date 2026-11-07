@@ -92,6 +92,6 @@ if [ -n "$SESSION_OUT_RAW" ]; then
   args+=(--session-out "$SESSION_OUT")
 fi
 
-"$RC_PADE_BIN" "${args[@]}"
+"$RC_PADE_BIN" "$${args[@]}"
 
 coder exp sync complete "$SYNC_NAME"
