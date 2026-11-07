@@ -5,7 +5,7 @@ variables {
   verified_profile_path = "~/.config/pade/rc-downstream/verified-profile.yaml"
   policy_path           = "~/.config/pade/rc-downstream/policy.yaml"
   allow_capabilities    = ["github.repo.read", "github.repo.write"]
-  broker_binding        = {
+  broker_binding = {
     provider = "broker"
     broker = {
       endpoint = "https://broker.example.com"
@@ -13,8 +13,8 @@ variables {
       identity = "gce"
     }
   }
-  bindings_path         = "~/.config/pade/coder-bindings.yaml"
-  pade_scripts          = ["after-certainty-pade-install_script"]
+  bindings_path = "~/.config/pade/coder-bindings.yaml"
+  pade_scripts  = ["after-certainty-pade-install_script"]
 }
 
 run "defaults" {
