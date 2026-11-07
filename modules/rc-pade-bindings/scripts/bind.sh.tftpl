@@ -7,7 +7,7 @@ decode() {
 
 expand_path() {
   case "$1" in
-    "~/"*)
+    \~/*)
       printf '%s/%s\n' "$HOME" "$(printf '%s' "$1" | cut -c3-)"
       ;;
     /*)
@@ -55,7 +55,7 @@ if [ ! -f "$POLICY" ]; then
 fi
 
 case "$RC_PADE_COMMAND" in
-  "~/"*|/*)
+  \~/*|/*)
     RC_PADE_BIN="$(expand_path "$RC_PADE_COMMAND")"
     ;;
   */*)
