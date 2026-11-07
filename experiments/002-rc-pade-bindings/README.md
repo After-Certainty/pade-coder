@@ -104,7 +104,7 @@ module "rc_pade_bindings" {
     "<rc-pade-installer-sync>",
   ]
 
-  rc_pade_command = "$HOME/.local/bin/rc-pade"
+  rc_pade_command = "~/.local/bin/rc-pade"
   session_out     = "~/.config/pade/rc-downstream/development-session.yaml"
 }
 ```
