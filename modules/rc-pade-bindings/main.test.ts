@@ -127,7 +127,11 @@ const setup = async (vars: Record<string, string> = {}) => {
       "mkdir -p /stubs /work /root/.config/pade",
       writeFile("/stubs/coder", CODER_STUB, "0755"),
       writeFile("/stubs/rc-pade", RC_PADE_STUB, "0755"),
-      writeFile("/work/verified-profile.yaml", "kind: RuntimeConditionsProfile\\n", "0600"),
+      writeFile(
+        "/work/verified-profile.yaml",
+        "kind: RuntimeConditionsProfile\\n",
+        "0600",
+      ),
       writeFile("/work/policy.yaml", "kind: ProjectionPolicy\\n", "0600"),
       writeFile("/tmp/run.sh", instance.script, "0755"),
       `cat > ${BINDINGS_PATH} <<'EOF'`,
