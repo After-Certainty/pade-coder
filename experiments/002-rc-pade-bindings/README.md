@@ -14,7 +14,8 @@ Live result (from rc-pade 015 on `gcp-pade` / `exp015_rc_pade_bind_v2`):
 
 - signed Experiment 014 handoff verified before bind;
 - `modules/rc-pade-bindings` @ `c40ba8c` invoked `rc-pade bind --verified-profile`;
-- no Experiment 011 adapter and no `validation-report.yaml` on the active path;
+- no Experiment 011 adapter and no `validation-report.yaml` dependency/input
+  on the active bind path (stale-report cleanup may still run);
 - restart + fresh-home regeneration;
 - fail-closed untrusted-handoff startup (empty `capabilities: {}`);
 - live `github.repo.read` authorized / `github.repo.write` broker-denied (HTTP 403).
@@ -44,7 +45,7 @@ deployed broker
 without:
 
 - the Experiment 011 adapter binary;
-- `validation-report.yaml`;
+- a `validation-report.yaml` dependency/input on the active bind path;
 - validator-module/version knowledge inside rc-pade or pade-coder;
 - manually staged bindings;
 - durable GitHub credentials in the workspace?
